@@ -1,0 +1,1 @@
+# quản lý, kết nối model và view
