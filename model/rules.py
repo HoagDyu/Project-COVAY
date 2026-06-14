@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .entities import Move
+from .board_logic import BoardLogic
 
 
 class Rules:
