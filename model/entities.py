@@ -32,10 +32,7 @@ class Cell:
     player: Player | None = None
     neighbors: list["Cell"] = field(default_factory=list)
     is_dead_mark: bool = False
-
-    @property
-    def is_blank(self) -> bool:
-        pass
+    is_blank: bool = True
 
     def set_stone(self, player: Player) -> None:
         pass
