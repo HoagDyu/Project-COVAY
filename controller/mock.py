@@ -30,8 +30,22 @@ class MockBoardWidget:
     def __init__(self):
         self.clicked_signal = FakeSignal() # Tương đương: Nút đặt cờ (Click lên lưới)
         
+        # Balo chứa "hàm đọc dữ liệu" (Do Controller cấp phát)
+        self._get_cell_func = None 
+
+    def set_data_accessors(self, cell_func, dead_func):
+        self._get_cell_func = cell_func
+        self._is_dead_func = dead_func
+
     def update(self): 
-        print("[UI BÀN CỜ] 🎨 Đã quét và vẽ lại toàn bộ quân cờ trên bàn!")
+        """Mô phỏng hàm paintEvent của hệ thống PyQt6"""
+        print("[UI BÀN CỜ] 🎨 Bị đánh thức! Mở balo lấy hàm ra để tự quét dữ liệu vẽ...")
+        
+        if self._get_cell_func is None:
+            print("   -> LỖI: Chưa có hàm truy xuất, UI không biết vẽ gì cả!")
+            return
+                    
+        print(f"   -> Đã vẽ xong! Trên màn hình hiện có {black_count} quân Đen và {white_count} quân Trắng.")
         
     def draw_dead_marks(self, coords): 
         print(f"[UI BÀN CỜ] ❌ Đã vẽ dấu X đỏ tại các tọa độ: {coords}")
@@ -44,18 +58,17 @@ class MockPanelWidget:
         self.pass_signal = FakeSignal()    # Nút: Bỏ lượt (Pass)
         self.resign_signal = FakeSignal()  # Nút: Đầu hàng (Resign)
         self.pause_signal = FakeSignal()   # Nút: Tạm dừng (Pause)
-        self.undo_signal = FakeSignal()
-        self.forward_signal = FakeSignal()     # Nút: Quay lại nước trước (Undo)
+        self.undo_signal = FakeSignal()    # Nút: Quay lại nước trước (Undo)
         
     def update_turn_display(self, color): 
-        print(f"[UI PANEL] 🏷️ Màn hình hiển thị: Đến lượt của quân {color}")
+        print(f"[UI PANEL] 🏷️ Màn hình hiển thị: Đến lượt của {color}")
 
 # ---------------------------------------------------------------------
 # 4. MOCK MAIN WINDOW (Khung cửa sổ tổng của ứng dụng)
 # ---------------------------------------------------------------------
 class MockMainWindow:
     def __init__(self):
-        # Chứa tất cả các màn hình và widget con bên trong
+        # Đóng gói tất cả các thành phần UI nhỏ vào một cửa sổ lớn
         self.menu_view = MockMenuView()
         self.board_widget = MockBoardWidget()
         self.panel_widget = MockPanelWidget()
@@ -67,9 +80,7 @@ class MockMainWindow:
         print(f"\n[UI POPUP ℹ️ THÔNG BÁO] {msg}")
 
     def switch_to_match_screen(self):
-        """Giả lập việc UI chuyển từ màn hình Menu sang màn hình Bàn cờ"""
         print("\n[UI HỆ THỐNG] 🔄 Đã chuyển giao diện: MENU ---> BÀN CỜ")
 
     def switch_to_menu_screen(self):
-        """Giả lập việc UI trở về sảnh chờ"""
         print("\n[UI HỆ THỐNG] 🔄 Đã chuyển giao diện: BÀN CỜ ---> MENU")

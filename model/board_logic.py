@@ -9,7 +9,7 @@ class BoardLogic:
     def __init__(self, size: int = 19):
         pass
 
-    def process_move(self, x: int, y: int) -> list[tuple[int, int]]:
+    def process_move(self, x: int, y: int) -> bool:
         pass
 
     def _place_stone(self, move: Move) -> None:
@@ -21,7 +21,7 @@ class BoardLogic:
     def _remove_captured_groups(self, groups: list[list[Cell]]) -> list[tuple[int, int]]:
         pass
 
-    def process_pass(self) -> str:
+    def process_pass(self) -> bool:
         pass
 
     def pass_turn(self) -> None:
@@ -36,7 +36,7 @@ class BoardLogic:
     def group_liberties(self, group: list[Cell]) -> int:
         pass
 
-    def process_remove_dead_group(self, x: int, y: int) -> list[tuple[int, int]]:
+    def process_remove_dead_group(self, x: int, y: int) -> bool:
         pass
 
     def remove_dead_group(self, x: int, y: int) -> int:
@@ -50,5 +50,3 @@ class BoardLogic:
 
     def get_current_player(self) -> Player:
         pass
-
-
