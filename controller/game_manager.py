@@ -1,46 +1,40 @@
-from model.board_logic import BoardLogic
+from ..model.board_logic import board_logic
+from ..model.rules import rules
+from .mock import MockMainWindow
 
+class game_controller:
+    def __init__(self):
+        self.mode = 1
+        self.game_mode = "PVP"
 
-class GameController:
-    def __init__(self, main_window):
+    def new_game_start(self):
         pass
 
-    def game_start(self, gamemode: str):
+    def start_previous_match():
         pass
-
-    def read_history_log(self):
-        pass
-
-    def end_game(self) -> None:
-        pass
-
-
-class MatchController:
-    def __init__(self, gamemode: str, status: str):
-        pass
-
-    def pvp_mode_start(self) -> None:
-        pass
-
-    def pve_mode_start(self) -> None:
-        pass
-
-    def end_match(self) -> None:
-        pass
-
-    def handle_click(self, x: int, y: int):
-        pass
-
-    def handle_pass(self):
-        pass
-
-    def handle_resign(self) -> None:
+    def end_game():
         pass
 
 
-class game_controller(GameController):
-    pass
+class match_controller:
+    def __init__(self, gamemode, main_window, rules, board_logic):
+        self.gamemode = gamemode
+        self.status = "PLAYING"
+
+    def pvp_mode_start():
+        pass
+    def pve_mode_start():
+        pass
+    def end_match():
+        pass
+    def handle_click(x: int, y: int):
+        pass
+    def handle_pass():
+        pass
+    def handle_resign():
+        pass
 
 
-class match_controller(MatchController):
-    pass
+
+
+
