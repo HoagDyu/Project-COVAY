@@ -34,9 +34,9 @@ class Cell:
     is_dead_mark: bool = False
     is_blank: bool = True
 
+    #dat quan co vao o
     def set_stone(self, player: Player) -> None:
         pass
-
     def clear_stone(self) -> None:
         pass
 

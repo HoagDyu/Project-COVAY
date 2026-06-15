@@ -21,7 +21,7 @@ class Board:
     #2. cell không được nằm cùng một ô với một quân cờ của đối thủ
     #3. ăn quân: check xung quanh có hết khí không, nếu hết khí thì xóa quân bị ăn
     #4. ktra nước đi tự tử: Sau khi ăn,  nếu quân mình đặt không có khí -> tự tử -> không hợp lệ -> báo lỗi
-    
+     
     
     #tra ve cell tai vi tri x, y, neu khong hop le tra ve None
     def get_cell(self, x: int, y: int) -> Cell:
@@ -75,7 +75,7 @@ class BoardLogic:
 
 
     #dat quan co len ban co, khong kiem tra hop le, chi dat quan co
-    def _place_stone(self, move: Move) -> None:
+    def _place_stone(self, move:Move) -> None:
         cell = self.board.get_cell(move.x, move.y)
         if cell:
             cell.player = move.player 
@@ -84,15 +84,19 @@ class BoardLogic:
     def _get_captured_groups(self, x: int, y: int) -> list[list[Cell]]:
         pass
 
+    #Xoa cac quan co bi an, tra ve danh sach vi tri cac quan co bi an
     def _remove_captured_groups(self, groups: list[list[Cell]]) -> list[tuple[int, int]]:
         pass
 
+    #Xử lý nước đi pass, trả về True nếu cả hai người chơi đều pass liên tiếp, ngược lại trả về False
     def process_pass(self) -> bool:
         pass
 
+    #Xử lý nước đi pass, không cần trả về giá trị nào
     def pass_turn(self) -> None:
         pass
 
+    #
     def get_liberties(self, x: int, y: int, player: Player | None = None) -> int:
         pass
 
