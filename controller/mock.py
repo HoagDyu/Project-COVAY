@@ -45,7 +45,6 @@ class MockBoardWidget:
             print("   -> LỖI: Chưa có hàm truy xuất, UI không biết vẽ gì cả!")
             return
                     
-        print(f"   -> Đã vẽ xong! Trên màn hình hiện có {black_count} quân Đen và {white_count} quân Trắng.")
         
     def draw_dead_marks(self, coords): 
         print(f"[UI BÀN CỜ] ❌ Đã vẽ dấu X đỏ tại các tọa độ: {coords}")

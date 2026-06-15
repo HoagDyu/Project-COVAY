@@ -31,7 +31,7 @@ class MatchController:
         self.board_logic = board_logic
         self.status = "IDLE"
 
-        cell_getter = self.board_logic.board.get_cell
+        cell_getter = self.board_logic.board.get_cell_color
         dead_getter = self.board_logic.board.is_dead_cell
 
         self.view.board_widget.set_data_accessors(cell_getter, dead_getter)

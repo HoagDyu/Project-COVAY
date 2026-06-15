@@ -5,16 +5,15 @@ from .board_logic import BoardLogic
 
 
 class Rules:
-    def is_valid_ip_place(self, move: Move, board: "BoardLogic") -> bool:
+    def is_valid_to_place(self, move: Move, board: BoardLogic) -> bool:
+        # Kiem tra move hop le: 1. move phai trong board, 2. cell tai move phai trong, 3. cell phai khong co quan co, 4. ktra suicide, 5. ktra ko, 6. co pass hay khong
+        
         pass
 
-    def is_valid_place(self, move: Move, board: "BoardLogic") -> bool:
+    def is_suicide(self, move: Move, board: BoardLogic) -> bool:
         pass
 
-    def suicide(self, move: Move, board: "BoardLogic") -> bool:
-        pass
-
-    def ko(self, move: Move, board: "BoardLogic") -> bool:
+    def is_ko(self, move: Move, board: BoardLogic) -> bool:
         pass
 
 
