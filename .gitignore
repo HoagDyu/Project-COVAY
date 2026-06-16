@@ -1,2 +1,5 @@
 .venv
 text_main_window.ui
+
+__pycache__/
+*.pyc
