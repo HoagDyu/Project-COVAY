@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from .entities import Cell, Move, Player
+from .entities import Cell, Move, Player, CellGroup
+from ..core.constant import StoneColor, Status
 
 class Board:
     def __init__(self, rows = 19, cols = 19):
@@ -12,7 +13,7 @@ class Board:
         for x in range(rows):
             row = []
             for y in range(cols):
-                cell = Cell(x, y)
+                cell = Cell(x,y)
                 row.append(cell)
             self.board.append(row)
 
@@ -28,6 +29,15 @@ class Board:
         if 0 <= x < self.rows and 0 <= y < self.cols:
             return self.board[x][y]
         return None
+    
+    def get_cell_color(self, x: int, y: int) -> StoneColor:
+        cell_color = self.get_cell(x=x,y=y).get_cell_color()
+        return cell_color
+    
+    def is_dead_cell(self, x:int, y:int) -> bool:
+        if 0 <= x < self.rows and 0 <= y < self.cols:
+            cell = self.board[x][y]
+        return cell.is_dead_mark
 
     # Kiem tra move hop le: 1. cell phai trong board, 2. cell phai trong, 3. cell phai khong co quan co
     def is_valid_move(self, x: int, y: int) -> bool:
@@ -40,10 +50,12 @@ class Board:
 
 
 class BoardLogic:
-    def __init__(self, size: int = 19):
+    def __init__(self, player_1: Player , player_2: Player, size: int = 19):
         self.board = Board(size, size)
-        self.players: list[Player] = []
-        self.current_player_index: int = 0
+        self.player_1 = player_1 
+        self.player_2 = player_2 
+        self.current_player: Player = player_1
+        self.cell_groups: list[CellGroup] = []
         self.move_history: list[Move] = []
         self.game_over: bool = False
 
@@ -57,7 +69,7 @@ class BoardLogic:
             print("Vị trí ({x}, {y}), đã có quân cờ.")
             return False
 
-        #dat cell
+        #dat move
         move = Move(player=self.get_current_player(), x=x, y=y)
         self._place_stone(move)
 
@@ -118,5 +130,5 @@ class BoardLogic:
     def calculate_all_territory(self) -> list[float]:
         pass
 
-    def get_current_player(self) -> Player:
-        pass
+    def get_current_player_color(self) -> StoneColor:
+        return self.current_player.color
