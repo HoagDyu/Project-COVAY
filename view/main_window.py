@@ -1,18 +1,36 @@
-# Cửa sổ chính, ghép các widget lại với nhau
-import sys
-from PyQt6.QtWidgets import QApplication, QWidget
-def main():
-    # 1. Create the application instance
-    app = QApplication(sys.argv)
-    # 2. Create the main window
-    window = QWidget()
-    window.setWindowTitle("My First PyQt6 App")
-    
-    # Set the window dimensions (x, y, width, height)
-    window.setGeometry(100, 100, 400, 300) 
-    # 3. Show the window
-    window.show()
-    # 4. Run the application's event loop safely
-    sys.exit(app.exec())
-if __name__ == '__main__':
-    main()
+from PyQt6.QtWidgets import QMainWindow, QApplication
+from PyQt6 import uic
+import os
+
+class MainWindow(QMainWindow):
+    def __init__(self,app):
+        super().__init__()
+        self.app = app
+        self.UwU_clicked = 0
+        self.UwU_text = ""
+        
+        ui_path = os.path.join("test_main_window.ui")
+
+        uic.loadUi(ui_path, self)
+
+        self.lcdNumber.display(self.UwU_clicked)
+        self.UwU_button.clicked.connect(self.handle_click)
+        self.clear_button.clicked.connect(self.handle_clear_button_click)
+        self.label.setText(self.UwU_text)
+        
+    def handle_click(self):
+        print("UwU")
+        self.UwU_clicked +=1
+        self.UwU_text = "UwU"
+        self.lcdNumber.display(self.UwU_clicked)
+        self.label.setText(self.UwU_text)
+        
+        
+    def handle_clear_button_click(self):
+        print("Quieeeee")
+        self.UwU_clicked = 0
+        self.UwU_text = "Clear"
+        self.lcdNumber.display(self.UwU_clicked)
+        self.label.setText(self.UwU_text)
+        
+ 
