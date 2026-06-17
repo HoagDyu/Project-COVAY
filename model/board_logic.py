@@ -1,19 +1,16 @@
-from __future__ import annotations
-
-from collections.abc import Iterable
-
 from .entities import Cell, Move, Player, CellGroup
 from ..core.constant import StoneColor, Status
+from .rules import Rules
 
 class Board:
-    def __init__(self, rows = 19, cols = 19):
+    def __init__(self, rows: int = 19, cols: int = 19):
         self.rows = rows
         self.cols = cols
-        self.board = []
+        self.board: list[list[Cell]] = []
         for x in range(rows):
-            row = []
+            row: list[Cell] = []
             for y in range(cols):
-                cell = Cell(x,y)
+                cell = Cell(x=x,y=y)
                 row.append(cell)
             self.board.append(row)
 
@@ -28,25 +25,26 @@ class Board:
     def get_cell(self, x: int, y: int) -> Cell:
         if 0 <= x < self.rows and 0 <= y < self.cols:
             return self.board[x][y]
-        return None
+        raise ValueError("Không tìm thấy Cell")
+        
     
     def get_cell_color(self, x: int, y: int) -> StoneColor:
         cell_color = self.get_cell(x=x,y=y).get_cell_color()
         return cell_color
     
-    def is_dead_cell(self, x:int, y:int) -> bool:
-        if 0 <= x < self.rows and 0 <= y < self.cols:
-            cell = self.board[x][y]
-        return cell.is_dead_mark
+    # def is_dead_cell(self, x:int, y:int) -> bool:
+    #     if 0 <= x < self.rows and 0 <= y < self.cols:
+    #         cell = self.board[x][y]
+    #     return cell.is_dead_mark
 
     # Kiem tra move hop le: 1. cell phai trong board, 2. cell phai trong, 3. cell phai khong co quan co
-    def is_valid_move(self, x: int, y: int) -> bool:
-        return 0 <= x < self.rows and 0 <= y < self.cols 
+    # def is_valid_move(self, x: int, y: int) -> bool:
+    #     return 0 <= x < self.rows and 0 <= y < self.cols 
 
     # Kiem tra cell co trong khong
-    def is_empty_cell(self, x: int, y: int) -> bool:
-        cell = self.get_cell(x, y)
-        return cell is not None and cell.player is None
+    # def is_empty_cell(self, x: int, y: int) -> bool:
+    #     cell = self.get_cell(x, y)
+    #     return cell is not None and cell.player is None
 
 
 class BoardLogic:
@@ -58,19 +56,21 @@ class BoardLogic:
         self.cell_groups: list[CellGroup] = []
         self.move_history: list[Move] = []
         self.game_over: bool = False
+        self.rules = Rules(self.board)
+
 
     def process_move(self, x: int, y: int) -> bool:
         #cell phai o trong board
-        if not self.board.is_valid_move(x, y):
+        if not self.rules.is_valid_move(x, y):
             print("Vị trí ({x}, {y}), không hợp lệ.")
             return False
         #cell phai trong va khong co quan co
-        if not self.board.is_empty_cell(x, y):
+        if not self.rules.is_empty_cell(x, y):
             print("Vị trí ({x}, {y}), đã có quân cờ.")
             return False
 
         #dat move
-        move = Move(player=self.get_current_player(), x=x, y=y)
+        move = Move(player=self.current_player, x=x, y=y)
         self._place_stone(move)
 
         #kiem tra an quan
@@ -88,9 +88,7 @@ class BoardLogic:
 
     #dat quan co len ban co, khong kiem tra hop le, chi dat quan co
     def _place_stone(self, move:Move) -> None:
-        cell = self.board.get_cell(move.x, move.y)
-        if cell:
-            cell.player = move.player 
+        pass
 
     #Lay quan het khi cua doi thu, neu co het khi thi xoa quan do
     def _get_captured_groups(self, x: int, y: int) -> list[list[Cell]]:
@@ -108,7 +106,7 @@ class BoardLogic:
     def pass_turn(self) -> None:
         pass
 
-    #
+    #Xử lý kết thúc trận đấu, tính điểm và xác định người chiến thắng
     def get_liberties(self, x: int, y: int, player: Player | None = None) -> int:
         pass
 
