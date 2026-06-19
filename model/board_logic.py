@@ -124,7 +124,7 @@ class BoardLogic:
                 self.game_over = True
                 return True
         return False
-
+    
     #Xử lý nước đi pass, không cần trả về giá trị nào
     def pass_turn(self) -> None:
         self.move_history.append(Move(player=self.current_player, x=None, y=None))
