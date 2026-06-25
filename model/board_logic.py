@@ -32,6 +32,14 @@ class Board:
         cell_color = self.get_cell(x=x,y=y).get_cell_color()
         return cell_color
 
+    def group_liberties(self, group: list[Cell]) -> int: 
+        liberties = 0
+        for cell in group:
+            for neighbor in cell.neighbors: # lay danh sach cac cell ke ben cell hien tai,
+                if neighbor.is_blank: #is_blank kiem tra xem cell co trong kho^ng
+                    liberties += 1
+        return liberties
+
     
 
 
@@ -71,7 +79,7 @@ class BoardLogic:
         for neighbor in cell.neighbors:
             if neighbor.get_cell_color() == opponent_color:
                 group = self.get_group(neighbor.x, neighbor.y) #
-                liberties = self.group_liberties(group) #check khí
+                liberties = self.board.group_liberties(group) #check khí
                 if liberties == 0: #nếu hết khí 
                     captured_groups.append(group) # thi them group vào danh sách captured_groups
 
@@ -107,7 +115,8 @@ class BoardLogic:
         captured_groups = self._get_captured_groups(x, y)
 
         #kiem tra tu tu
-        if not captured_groups and self.get_liberties(x, y) == 0:
+        group = self.get_group(x, y)
+        if not captured_groups and self.board.group_liberties(group) == 0:
             print("Nước đi ({x}, {y}) là tự tử.")
             return False
 
@@ -136,29 +145,24 @@ class BoardLogic:
         self.current_player = self.player_1 if self.current_player == self.player_2 else self.player_2
     
     #Xử lý kết thúc trận đấu, tính điểm và xác định người chiến thắng
-    def get_liberties(self, x: int, y: int, player: Player | None = None) -> int:
-        cell = self.board.get_cell(x, y)
-        if player is None:
-            player = self.current_player
-        if cell.get_cell_color() != player.color:
-            return 0
-        group = self.get_group(x, y)
-        return self.group_liberties(group)
+    def calculate_liberties(self, x: int, y: int, player: Player | None = None) -> int:
+        pass
 
-    #lay danh sach cac quan co cung group voi cell tai vi tri x, y
     def get_group(self, x: int, y: int) -> list[Cell]:
         pass
-    
+
     def process_remove_dead_group(self, x: int, y: int) -> bool:
         pass
 
     def remove_dead_group(self, x: int, y: int) -> int:
         pass
 
-    def process_end_match(self) -> None:
+    #Tính điểm cho tất cả các vùng lãnh thổ của cả hai người chơi, trả về danh sách điểm của từng người chơi
+    def calculate_all_territory(self) -> list[float]:
         pass
 
-    def calculate_all_territory(self) -> list[float]:
+    #ket thuc tran dau, tinh diem va xac dinh nguoi chien thang
+    def process_end_match(self) -> None:
         pass
 
     def get_current_player_color(self) -> StoneColor:
