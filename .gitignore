@@ -1,3 +1,4 @@
 .venv
 text_main_window.ui
-.idea
+__pycache__/
+*.py[cod]

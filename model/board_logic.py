@@ -1,169 +1,189 @@
-from .entities import Cell, Move, Player, CellGroup
-from ..core.constant import StoneColor, Status
+from __future__ import annotations
+
+from collections import deque
+
+from core.constant import StoneColor
+from .entities import Cell, CellGroup, Move, Player
 from .rules import Rules
+
 
 class Board:
     def __init__(self, rows: int = 19, cols: int = 19):
         self.rows = rows
         self.cols = cols
-        self.board: list[list[Cell]] = []
-        for x in range(rows):
-            row: list[Cell] = []
-            for y in range(cols):
-                cell = Cell(x=x,y=y)
-                row.append(cell)
-            self.board.append(row)
+        self.board: list[list[Cell]] = [
+            [Cell(x=x, y=y) for y in range(cols)]
+            for x in range(rows)
+        ]
+        self._link_neighbors()
 
-    #dieu kien ham place_stone:
-    #1. cell phai trong board, kiem tra vi tri x, y co hop le hay khong
-    #2. cell không được nằm cùng một ô với một quân cờ của đối thủ
-    #3. ăn quân: check xung quanh có hết khí không, nếu hết khí thì xóa quân bị ăn
-    #4. ktra nước đi tự tử: Sau khi ăn,  nếu quân mình đặt không có khí -> tự tử -> không hợp lệ -> báo lỗi
-     
-    
-    #tra ve cell tai vi tri x, y, neu khong hop le tra ve None
+    def _link_neighbors(self) -> None:
+        for x in range(self.rows):
+            for y in range(self.cols):
+                self.board[x][y].neighbors = [
+                    self.board[nx][ny]
+                    for nx, ny in self.iter_neighbor_positions(x, y)
+                ]
+
+    def iter_neighbor_positions(self, x: int, y: int):
+        for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+            if 0 <= nx < self.rows and 0 <= ny < self.cols:
+                yield nx, ny
+
     def get_cell(self, x: int, y: int) -> Cell:
         if 0 <= x < self.rows and 0 <= y < self.cols:
             return self.board[x][y]
-        raise ValueError("Không tìm thấy Cell")
-        
-    
+        raise ValueError("Cell position is outside the board")
+
     def get_cell_color(self, x: int, y: int) -> StoneColor:
-        cell_color = self.get_cell(x=x,y=y).get_cell_color()
-        return cell_color
+        return self.get_cell(x=x, y=y).get_cell_color()
 
-    def group_liberties(self, group: list[Cell]) -> int: 
-        liberties = 0
+    def is_dead_cell(self, x: int, y: int) -> bool:
+        return self.get_cell(x=x, y=y).is_dead_mark
+
+    def group_liberties(self, group: list[Cell]) -> int:
+        liberties: set[tuple[int, int]] = set()
         for cell in group:
-            for neighbor in cell.neighbors: # lay danh sach cac cell ke ben cell hien tai,
-                if neighbor.is_blank: #is_blank kiem tra xem cell co trong kho^ng
-                    liberties += 1
-        return liberties
-
-    
+            for neighbor in cell.neighbors:
+                if neighbor.is_blank:
+                    liberties.add((neighbor.x, neighbor.y))
+        return len(liberties)
 
 
 class BoardLogic:
-    def __init__(self, player_1: Player , player_2: Player, size: int = 19):
+    def __init__(self, size: int = 19):
         self.board = Board(size, size)
-        self.player_1 = player_1 
-        self.player_2 = player_2 
-        self.current_player: Player = player_1
-        self.cell_groups: list[CellGroup] = []
+        self.player_1: Player = Player(color=StoneColor.BLACK)
+        self.player_2: Player = Player(color=StoneColor.WHITE)
+        self.current_player: Player = self.player_1
+        self.next_player: Player = self.player_2
         self.move_history: list[Move] = []
         self.game_over: bool = False
         self.rules = Rules(self.board)
 
-    #dat quan co len ban co  
-    def _place_stone(self, move:Move) -> None:
-            if move.x is None or move.y is None:
-                raise ValueError("Nước đi không hợp lệ")
-            cell = self.board.get_cell(move.x, move.y)
-            setattr(cell, "stone_color", self.current_player.color)
-    
-    #Lay quan het khi cua doi thu, neu co het khi thi xoa quan do
+    def switch_turn(self) -> None:
+        self.current_player, self.next_player = self.next_player, self.current_player
+
+    def _place_stone(self, move: Move) -> bool:
+        if move.x is None or move.y is None:
+            return False
+        self.board.get_cell(move.x, move.y).set_stone_color(move.player)
+        return True
+
     def _get_captured_groups(self, x: int, y: int) -> list[list[Cell]]:
-        cell = self.board.get_cell(x, y)
-        if getattr(cell, "stone_color", None) is None:
-            return []
-        if cell.get_cell_color() == self.current_player.color:
+        placed_cell = self.board.get_cell(x, y)
+        if placed_cell.is_blank:
             return []
 
-        if self.current_player.color == StoneColor.BLACK:
-            opponent_color = StoneColor.WHITE
-        else:
-            opponent_color = StoneColor.BLACK
+        opponent_color = (
+            StoneColor.WHITE
+            if placed_cell.get_cell_color() == StoneColor.BLACK
+            else StoneColor.BLACK
+        )
 
-        #Xem xung quanh cell, neu co quan doi thu het khi thi xoa quan do
         captured_groups: list[list[Cell]] = []
-        for neighbor in cell.neighbors:
-            if neighbor.get_cell_color() == opponent_color:
-                group = self.get_group(neighbor.x, neighbor.y) #
-                liberties = self.board.group_liberties(group) #check khí
-                if liberties == 0: #nếu hết khí 
-                    captured_groups.append(group) # thi them group vào danh sách captured_groups
+        seen: set[tuple[int, int]] = set()
+        for neighbor in placed_cell.neighbors:
+            if neighbor.get_cell_color() != opponent_color or (neighbor.x, neighbor.y) in seen:
+                continue
+
+            cell_group = self.BFS(neighbor.x, neighbor.y)
+            seen.update((cell.x, cell.y) for cell in cell_group.group)
+            if cell_group.liberties == 0:
+                captured_groups.append(cell_group.group)
 
         return captured_groups
-    
-        
 
-    #Xoa cac quan co bi an, tra ve danh sach vi tri cac quan co bi an
     def _remove_captured_groups(self, groups: list[list[Cell]]) -> list[tuple[int, int]]:
         captured_positions: list[tuple[int, int]] = []
         for group in groups:
             for cell in group:
                 captured_positions.append((cell.x, cell.y))
-                cell.clear_stone() #xóa quân cờ trên ô đó
+                cell.clear_stone()
         return captured_positions
 
-
     def process_move(self, x: int, y: int) -> bool:
-        #cell phai o trong board
         if not self.rules.is_valid_move(x, y):
-            print("Vị trí ({x}, {y}), không hợp lệ.")
             return False
-        #cell phai trong va khong co quan co
         if not self.rules.is_empty_cell(x, y):
-            print("Vị trí ({x}, {y}), đã có quân cờ.")
             return False
 
-        #dat move
         move = Move(player=self.current_player, x=x, y=y)
         self._place_stone(move)
 
-        #kiem tra an quan
         captured_groups = self._get_captured_groups(x, y)
+        self._remove_captured_groups(captured_groups)
 
-        #kiem tra tu tu
-        group = self.get_group(x, y)
-        if not captured_groups and self.board.group_liberties(group) == 0:
-            print("Nước đi ({x}, {y}) là tự tử.")
+        if not captured_groups and self.get_liberties(x, y) == 0:
+            self.board.get_cell(x, y).clear_stone()
             return False
 
         self.move_history.append(move)
-        return True    
-    
-    #Xử lý nước đi pass, trả về True nếu cả hai người chơi đều pass liên tiếp, ngược lại trả về False
+        self.switch_turn()
+        return True
+
     def process_pass(self) -> bool:
-        self.move_history.append(Move(player=self.current_player, x=None, y=None))
-        if len(self.move_history) >= 2:
-            last_move = self.move_history[-1]
-            second_last_move = self.move_history[-2]
-            if last_move.x is None and last_move.y is None and second_last_move.x is None and second_last_move.y is None:
-                self.game_over = True
-                return True
-        return False
-    
-    #Xử lý nước đi pass, không cần trả về giá trị nào
+        if len(self.move_history) >= 1 and self.move_history[-1].is_pass:
+            self.game_over = True
+            return False
+        self.pass_turn()
+        return True
+
     def pass_turn(self) -> None:
-        self.move_history.append(Move(player=self.current_player, x=None, y=None))
-        if len(self.move_history) >= 2:
-            last_move = self.move_history[-1]
-            second_last_move = self.move_history[-2]
-            if last_move.x is None and last_move.y is None and second_last_move.x is None and second_last_move.y is None:
-                self.game_over = True
-        self.current_player = self.player_1 if self.current_player == self.player_2 else self.player_2
-    
-    #Xử lý kết thúc trận đấu, tính điểm và xác định người chiến thắng
-    def calculate_liberties(self, x: int, y: int, player: Player | None = None) -> int:
+        self.move_history.append(Move(player=self.current_player, x=None, y=None, is_pass=True))
+        self.switch_turn()
+
+    def resign(self) -> bool:
         pass
+
+    def BFS(self, x: int, y: int) -> CellGroup:
+        start = self.board.get_cell(x, y)
+        if start.is_blank:
+            return CellGroup(group=[], liberties=0)
+
+        color = start.get_cell_color()
+        group: list[Cell] = []
+        liberties: set[tuple[int, int]] = set()
+        visited: set[tuple[int, int]] = {(x, y)}
+        queue = deque([start])
+
+        while queue:
+            cell = queue.popleft()
+            group.append(cell)
+
+            for neighbor in cell.neighbors:
+                key = (neighbor.x, neighbor.y)
+                if neighbor.is_blank:
+                    liberties.add(key)
+                elif neighbor.get_cell_color() == color and key not in visited:
+                    visited.add(key)
+                    queue.append(neighbor)
+
+        return CellGroup(group=group, liberties=len(liberties))
+
+    def get_liberties(self, x: int, y: int, player: Player | None = None) -> int:
+        return self.BFS(x, y).liberties
 
     def get_group(self, x: int, y: int) -> list[Cell]:
-        pass
+        return self.BFS(x, y).group
 
-    def process_remove_dead_group(self, x: int, y: int) -> bool:
+    def process_dead_group(self, x: int, y: int) -> bool:
         pass
 
     def remove_dead_group(self, x: int, y: int) -> int:
         pass
 
-    #Tính điểm cho tất cả các vùng lãnh thổ của cả hai người chơi, trả về danh sách điểm của từng người chơi
     def calculate_all_territory(self) -> list[float]:
         pass
 
-    #ket thuc tran dau, tinh diem va xac dinh nguoi chien thang
     def process_end_match(self) -> None:
         pass
 
     def get_current_player_color(self) -> StoneColor:
         return self.current_player.color
+
+    def get_current_player(self) -> Player:
+        return self.current_player
+
+
+board_logic = BoardLogic

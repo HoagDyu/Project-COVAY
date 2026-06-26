@@ -1,6 +1,6 @@
 from ..model.board_logic import BoardLogic
 from .mock import MockMainWindow
-
+from ..core.constant import Status
 
 class GameController:
     def __init__(self, main_window: MockMainWindow):
@@ -11,13 +11,11 @@ class GameController:
         self.view.menu_view.pve_start_signal.connect(lambda: self.game_start("PVE"))
 
     def game_start(self,game_mode: str):
-        self.board_logic = BoardLogic()
         self.game_mode = game_mode
 
         self.current_match = MatchController(
             view=self.view,
-            game_mode=self.game_mode,
-            board_logic=self.board_logic,
+            game_mode=self.game_mode
         )
 
     def end_game():
@@ -25,11 +23,11 @@ class GameController:
 
 
 class MatchController:
-    def __init__(self, board_logic: BoardLogic, view: MockMainWindow, game_mode: str, bot=None):
+    def __init__(self, view: MockMainWindow, game_mode: str, bot=None):
         self.view = view
         self.game_mode = game_mode
-        self.board_logic = board_logic
-        self.status = "IDLE"
+        self.board_logic = BoardLogic()
+        self.status = Status.IDLE
 
         cell_getter = self.board_logic.board.get_cell_color
         dead_getter = self.board_logic.board.is_dead_cell
@@ -48,6 +46,11 @@ class MatchController:
         else:
             self.pve_match_start()
             
+    def update_board(self):
+        self.view.board_widget.update()
+        next_player_color = self.board_logic.get_current_player().color
+        self.view.panel_widget.update_turn_display(next_player_color)
+
     def pvp_match_start(self):
         self.status = "PLAYING"
         first_player_color = self.board_logic.get_current_player().color
@@ -61,28 +64,28 @@ class MatchController:
     def end_match():
         pass
     def handle_click(self,x: int, y: int):
-        match self.statusL:
-            case "PLAYING" | "HUMAN_TURN":
+        match self.status:
+            case Status.PLAYING | Status.HUMAN_TURN:
                 is_valid = self.board_logic.process_move(x=x,y=y)
                 if is_valid:
-                    self.view.board_widget.update()
-                    next_player_color = self.board_logic.get_current_player().color
-                    self.view.panel_widget.update_turn_display(next_player_color)
+                    self.update_board()
                 else:
                     self.view.show_error("invalid move")
+            case Status.PAUSE | Status.BOT_TURN | Status.DONE:
+                pass
+            case Status.CLEANING:
+                is_valid = self.board_logic.process_dead_group(x=x, y=y)
+                if is_valid:
+                    self.update_board()
         
-    def handle_pass():
-        pass
-    def handle_resign():
-        pass
-    def handle_pause():
-        pass
-    def handle_undo():
-        pass
-    def handle_forward():
-        pass
+    def handle_pass(self):
+        self.board_logic.pass_turn()
+    def handle_resign(self):
+        self.board_logic.resign()
+    def handle_pause(self):
+        self.status = Status.PAUSE
 
-
+    
 
 
 
