@@ -75,32 +75,25 @@ class BoardLogic:
         if placed_cell.is_blank:
             return []
 
-        opponent_color = (
-            StoneColor.WHITE
-            if placed_cell.get_cell_color() == StoneColor.BLACK
-            else StoneColor.BLACK
-        )
-
+        opponent_color = self.next_player.color
         captured_groups: list[list[Cell]] = []
-        seen: set[tuple[int, int]] = set()
+        checked_positions: set[tuple[int, int]] = set()
+
         for neighbor in placed_cell.neighbors:
-            if neighbor.get_cell_color() != opponent_color or (neighbor.x, neighbor.y) in seen:
+            if neighbor.color != opponent_color:
                 continue
 
-            cell_group = self.BFS(neighbor.x, neighbor.y)
-            seen.update((cell.x, cell.y) for cell in cell_group.group)
+            if (neighbor.x, neighbor.y) in checked_positions:
+                continue
+
+            cell_group = self.BFS(x=neighbor.x, y=neighbor.y)
+            for cell in cell_group.group:
+                checked_positions.add((cell.x, cell.y))
+
             if cell_group.liberties == 0:
                 captured_groups.append(cell_group.group)
 
         return captured_groups
-
-    def _remove_captured_groups(self, groups: list[list[Cell]]) -> list[tuple[int, int]]:
-        captured_positions: list[tuple[int, int]] = []
-        for group in groups:
-            for cell in group:
-                captured_positions.append((cell.x, cell.y))
-                cell.clear_stone()
-        return captured_positions
 
     def process_move(self, x: int, y: int) -> bool:
         if not self.rules.is_valid_move(x, y):
@@ -109,25 +102,30 @@ class BoardLogic:
             return False
 
         move = Move(player=self.current_player, x=x, y=y)
+        if self.rules.is_ko(move, self):
+            return False
+
         self._place_stone(move)
 
         captured_groups = self._get_captured_groups(x, y)
-        self._remove_captured_groups(captured_groups)
+        prisoner_count = 0
+        for group in captured_groups:
+            prisoner_count += self._remove_group(group)
 
-        if not captured_groups and self.get_liberties(x, y) == 0:
+        if prisoner_count == 0 and self.get_liberties(x, y) == 0:
             self.board.get_cell(x, y).clear_stone()
             return False
 
+        self.current_player.prisoner += prisoner_count
         self.move_history.append(move)
         self.switch_turn()
         return True
 
     def process_pass(self) -> bool:
-        if len(self.move_history) >= 1 and self.move_history[-1].is_pass:
-            self.game_over = True
-            return False
         self.pass_turn()
-        return True
+        if len(self.move_history) >= 2 and self.move_history[-1].is_pass and self.move_history[-2].is_pass:
+            self.game_over = True
+        return self.game_over
 
     def pass_turn(self) -> None:
         self.move_history.append(Move(player=self.current_player, x=None, y=None, is_pass=True))
@@ -161,17 +159,39 @@ class BoardLogic:
 
         return CellGroup(group=group, liberties=len(liberties))
 
-    def get_liberties(self, x: int, y: int, player: Player | None = None) -> int:
+    def get_liberties(self, x: int, y: int) -> int:
         return self.BFS(x, y).liberties
 
     def get_group(self, x: int, y: int) -> list[Cell]:
         return self.BFS(x, y).group
 
     def process_dead_group(self, x: int, y: int) -> bool:
-        pass
+        try:
+            dead_group = self.get_group(x=x, y=y)
+            if not dead_group:
+                return False
+
+            player_color = dead_group[0].color
+            prisoner_count = self._remove_group(dead_group)
+
+            if player_color == self.player_1.color:
+                self.player_2.prisoner += prisoner_count
+            else:
+                self.player_1.prisoner += prisoner_count
+            return True
+        except ValueError:
+            return False
+    
+
+    def _remove_group(self, dead_group: list[Cell]) -> int:
+        prisoner = 0
+        for cell in dead_group:
+            cell.clear_stone()
+            prisoner += 1
+        return prisoner
 
     def remove_dead_group(self, x: int, y: int) -> int:
-        pass
+        return self._remove_group(self.get_group(x, y))
 
     def calculate_all_territory(self) -> list[float]:
         pass
