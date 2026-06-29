@@ -1,29 +1,28 @@
-import random
-from typing import List, Optional, Tuple
+from __future__ import annotations
+
+from model.board_logic import BoardLogic
+
+from .bot_algorithm import choose_best_move
 
 
-class RandomBot:
-    
-
-    def __init__(self, seed: Optional[int] = None) -> None:
-        self._rng = random.Random(seed)
+class BotAI:
+    """Basic Bot AI."""
 
     def select_move(
         self,
-        board,
-        color: int,
-        valid_moves: Optional[List[Tuple[int, int]]] = None,
-    ) -> Optional[Tuple[int, int]]:
-        """Return a random legal move or None if no move is available."""
-        if valid_moves is None:
-            valid_moves = [
-                (x, y)
-                for y in range(board.size)
-                for x in range(board.size)
-                if board.is_empty(x, y)
-            ]
+        board_logic: BoardLogic,
+    ) -> tuple[int, int] | None:
+        """
+        Return the coordinate (x, y) chosen by the bot.
 
-        if not valid_moves:
-            return None
+        Parameters
+        ----------
+        board_logic : BoardLogic
+            Current game state.
 
-        return self._rng.choice(valid_moves)
+        Returns
+        -------
+        tuple[int, int] | None
+            Selected move or None if no move exists.
+        """
+        return choose_best_move(board_logic)
