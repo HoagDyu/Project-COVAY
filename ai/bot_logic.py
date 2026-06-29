@@ -1,1 +1,0 @@
-# Viết logic của bot
