@@ -177,6 +177,7 @@ class BoardLogic:
         pass
 
     def process_end_match(self) -> None:
+        
         pass
 
     def get_current_player_color(self) -> StoneColor:
