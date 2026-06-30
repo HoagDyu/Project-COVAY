@@ -55,6 +55,7 @@ class BoardLogic:
         self.board = Board(size, size)
         self.player_1: Player = Player(color=StoneColor.BLACK)
         self.player_2: Player = Player(color=StoneColor.WHITE)
+        self.winner: Player | None = None
         self.current_player: Player = self.player_1
         self.next_player: Player = self.player_2
         self.move_history: list[Move] = []
@@ -131,8 +132,9 @@ class BoardLogic:
         self.move_history.append(Move(player=self.current_player, x=None, y=None, is_pass=True))
         self.switch_turn()
 
-    def resign(self) -> bool:
-        pass
+    def resign(self) -> None:
+        self.winner = self.next_player
+        self.game_over = True
 
     def BFS(self, x: int, y: int) -> CellGroup:
         start = self.board.get_cell(x, y)
@@ -197,7 +199,7 @@ class BoardLogic:
         pass
 
     def process_end_match(self) -> None:
-        
+        self.winner = self.next_player
         pass
 
     def get_current_player_color(self) -> StoneColor:

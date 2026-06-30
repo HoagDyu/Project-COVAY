@@ -52,7 +52,7 @@ class MatchController:
         self.view.panel_widget.update_turn_display(next_player_color)
 
     def pvp_match_start(self):
-        self.status = "PLAYING"
+        self.status = "PLAYING" 
         first_player_color = self.board_logic.get_current_player().color
         self.view.panel_widget.update_turn_display(first_player_color)
         self.view.board_widget.update()
