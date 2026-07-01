@@ -195,8 +195,45 @@ class BoardLogic:
     def remove_dead_group(self, x: int, y: int) -> int:
         return self._remove_group(self.get_group(x, y))
 
-    def calculate_all_territory(self) -> list[float]:
-        pass
+    def BFS_blank_group(self, x: int, y: int):
+        start = self.board.get_cell(x, y)
+        border_color: set[StoneColor] = set()
+        visited: set[tuple[int,int]] = {(x,y)}
+        queue = deque([start])
+
+        while queue:
+            cell = queue.popleft()
+
+            for neighbor in cell.neighbors:
+                key = (neighbor.x, neighbor.y)
+                if neighbor.is_blank and key not in visited:
+                    visited.add(key)
+                    queue.append(neighbor)
+                elif not neighbor.is_blank:
+                    border_color.add(neighbor.get_cell_color())
+        return visited, border_color
+
+    def calculate_all_territory(self):
+        black_teritories = 0
+        white_teritories = 0
+        visited_cell = set()
+        for x in range(self.board.rows):
+            for y in range(self.board.cols):
+                cell = self.board.get_cell(x,y)
+                key = (x,y)
+                if key in visited_cell or not cell.is_blank:
+                    continue
+                else:
+                    blank_cell_group, border_color = self.BFS_blank_group(x=x,y=y)
+                    visited_cell.update(blank_cell_group)
+                    if len(border_color) > 1 or not border_color:
+                        continue
+                    elif border_color == {StoneColor.BLACK}:
+                        black_teritories += len(blank_cell_group)
+                    else:
+                        white_teritories += len(blank_cell_group)
+
+        return black_teritories, white_teritories
 
     def process_end_match(self) -> None:
         self.winner = self.next_player

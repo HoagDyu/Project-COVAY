@@ -1,9 +1,9 @@
 from ..model.board_logic import BoardLogic
-from .mock import MockMainWindow
+from ..view.main_window import MainWindow
 from ..core.constant import Status
 
 class GameController:
-    def __init__(self, main_window: MockMainWindow):
+    def __init__(self, main_window: MainWindow):
         self.view = main_window
         self.current_match = None
 
@@ -23,7 +23,7 @@ class GameController:
 
 
 class MatchController:
-    def __init__(self, view: MockMainWindow, game_mode: str, bot=None):
+    def __init__(self, view: MainWindow, game_mode: str, bot=None):
         self.view = view
         self.game_mode = game_mode
         self.board_logic = BoardLogic()
