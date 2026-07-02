@@ -131,7 +131,7 @@ class BoardLogicBFSTest(unittest.TestCase):
 
         self.assertFalse(first_pass_ended_game)
         self.assertTrue(second_pass_ended_game)
-        self.assertTrue(self.logic.game_over)
+        self.assertTrue(self.logic.is_game_over)
         self.assertEqual(len(self.logic.move_history), 2)
 
 
@@ -201,6 +201,22 @@ class BoardLogicTerritoryTest(unittest.TestCase):
 
         self.assertEqual(black_territory, 0)
         self.assertEqual(white_territory, 0)
+
+
+class BoardLogicEndMatchTest(unittest.TestCase):
+    def setUp(self):
+        self.logic = BoardLogic(size=5)
+
+    def test_resign_returns_next_player_and_sets_game_over(self):
+        winner = self.logic.resign()
+
+        self.assertEqual(winner, StoneColor.WHITE)
+        self.assertTrue(self.logic.is_game_over)
+
+    def test_process_end_match_returns_winner_color(self):
+        winner = self.logic.process_end_match()
+
+        self.assertIn(winner, {StoneColor.BLACK, StoneColor.WHITE})
 
 
 if __name__ == "__main__":

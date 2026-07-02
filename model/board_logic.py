@@ -53,13 +53,12 @@ class Board:
 class BoardLogic:
     def __init__(self, size: int = 19):
         self.board = Board(size, size)
-        self.player_1: Player = Player(color=StoneColor.BLACK)
-        self.player_2: Player = Player(color=StoneColor.WHITE)
-        self.winner: Player | None = None
+        self.player_1: Player = Player(color=StoneColor.BLACK,komi=0)
+        self.player_2: Player = Player(color=StoneColor.WHITE,komi=6.5)
         self.current_player: Player = self.player_1
         self.next_player: Player = self.player_2
         self.move_history: list[Move] = []
-        self.game_over: bool = False
+        self.is_game_over: bool = False
         self.rules = Rules(self.board)
 
     def switch_turn(self) -> None:
@@ -125,16 +124,12 @@ class BoardLogic:
     def process_pass(self) -> bool:
         self.pass_turn()
         if len(self.move_history) >= 2 and self.move_history[-1].is_pass and self.move_history[-2].is_pass:
-            self.game_over = True
-        return self.game_over
+            self.is_game_over = True
+        return self.is_game_over
 
     def pass_turn(self) -> None:
         self.move_history.append(Move(player=self.current_player, x=None, y=None, is_pass=True))
         self.switch_turn()
-
-    def resign(self) -> None:
-        self.winner = self.next_player
-        self.game_over = True
 
     def BFS(self, x: int, y: int) -> CellGroup:
         start = self.board.get_cell(x, y)
@@ -235,9 +230,18 @@ class BoardLogic:
 
         return black_teritories, white_teritories
 
-    def process_end_match(self) -> None:
-        self.winner = self.next_player
-        pass
+    def process_end_match(self) -> StoneColor:
+        black_teritories, white_teritories = self.calculate_all_territory()
+        self.player_1.add_territory(black_teritories)
+        self.player_2.add_territory(white_teritories)
+        if self.player_1.get_score() > self.player_2.get_score():
+            return self.player_1.color
+        else:
+            return self.player_2.color
+
+    def resign(self) -> StoneColor:
+        self.is_game_over = True
+        return self.next_player.color
 
     def get_current_player_color(self) -> StoneColor:
         return self.current_player.color

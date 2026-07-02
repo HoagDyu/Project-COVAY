@@ -14,16 +14,16 @@ class Player:
     score: float = 0.0
 
     def add_territory(self, n: int) -> None:
-        pass
-
+        self.territory += n
+        self.calc_score()
     def add_prisoner(self, n: int) -> None:
-        pass
-
-    def add_point(self, n: float) -> None:
-        pass
+        self.prisoner += n
+        self.calc_score()
+    def calc_score(self) -> None:
+        self.score = self.territory + self.prisoner + self.komi
 
     def get_score(self) -> float:
-        pass
+        return self.score
 
 
 @dataclass
