@@ -3,8 +3,9 @@ from __future__ import annotations
 from collections import deque
 
 from core.constant import StoneColor
-from .entities import Cell, CellGroup, Move, Player
-from .rules import Rules
+from model.entities import Cell, CellGroup, Move, Player
+from model.rules import Rules
+from ai.class_bot import BotAI
 
 
 class Board:
@@ -51,7 +52,7 @@ class Board:
 
 
 class BoardLogic:
-    def __init__(self, size: int = 19):
+    def __init__(self, size: int = 19, bot: bool = False, bot_color: StoneColor = StoneColor.EMPTY):
         self.board = Board(size, size)
         self.player_1: Player = Player(color=StoneColor.BLACK,komi=0)
         self.player_2: Player = Player(color=StoneColor.WHITE,komi=6.5)
@@ -60,6 +61,20 @@ class BoardLogic:
         self.move_history: list[Move] = []
         self.is_game_over: bool = False
         self.rules = Rules(self.board)
+        self.bot: BotAI = None
+
+        if bot:
+            if bot_color == StoneColor.BLACK:
+                ai_bot = BotAI(color=StoneColor.BLACK)
+                self.player_1 = ai_bot
+                self.bot = self.player_1
+            elif bot_color == StoneColor.WHITE:
+                ai_bot = BotAI(color=StoneColor.WHITE)
+                self.player_2 = ai_bot
+                self.bot = self.player_2
+
+    def get_bot(self):
+        return self.bot
 
     def switch_turn(self) -> None:
         self.current_player, self.next_player = self.next_player, self.current_player

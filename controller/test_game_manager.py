@@ -22,6 +22,19 @@ class MockMenuView:
         self.pve_start_signal = FakeSignal()
 
 
+class MockMenuWidget:
+    def __init__(self):
+        self.size = 5
+        self.bot = False
+        self.bot_color = StoneColor.EMPTY
+
+    def get_size(self):
+        return self.size
+
+    def get_bot(self):
+        return self.bot, self.bot_color
+
+
 class MockBoardWidget:
     def __init__(self):
         self.clicked_signal = FakeSignal()
@@ -58,6 +71,7 @@ class MockPanelWidget:
 class MockMainWindow:
     def __init__(self):
         self.menu_view = MockMenuView()
+        self.menu_widget = MockMenuWidget()
         self.board_widget = MockBoardWidget()
         self.panel_widget = MockPanelWidget()
         self.errors = []
@@ -83,7 +97,7 @@ class MatchControllerTest(unittest.TestCase):
         self.assertEqual(controller.current_match.status, Status.PLAYING)
 
     def test_match_controller_initializes_view_accessors_and_signals(self):
-        controller = self.module.MatchController(view=self.view, game_mode="PVP")
+        controller = self.module.MatchController(view=self.view, game_mode="PVP", size=5)
 
         self.assertEqual(controller.status, Status.PLAYING)
         self.assertIsNotNone(self.view.board_widget.cell_getter)
@@ -95,7 +109,7 @@ class MatchControllerTest(unittest.TestCase):
         self.assertIn(controller.end_match, self.view.panel_widget.done_cleaning_signal.slots)
 
     def test_handle_click_places_stone_and_updates_board(self):
-        controller = self.module.MatchController(view=self.view, game_mode="PVP")
+        controller = self.module.MatchController(view=self.view, game_mode="PVP", size=5)
         initial_update_count = self.view.board_widget.update_count
 
         controller.handle_click(2, 2)
@@ -105,7 +119,7 @@ class MatchControllerTest(unittest.TestCase):
         self.assertEqual(self.view.errors, [])
 
     def test_handle_click_invalid_move_shows_error(self):
-        controller = self.module.MatchController(view=self.view, game_mode="PVP")
+        controller = self.module.MatchController(view=self.view, game_mode="PVP", size=5)
 
         controller.handle_click(2, 2)
         controller.handle_click(2, 2)
@@ -113,7 +127,7 @@ class MatchControllerTest(unittest.TestCase):
         self.assertEqual(self.view.errors, ["invalid move"])
 
     def test_handle_pass_moves_to_cleaning_after_two_passes(self):
-        controller = self.module.MatchController(view=self.view, game_mode="PVP")
+        controller = self.module.MatchController(view=self.view, game_mode="PVP", size=5)
 
         controller.handle_pass()
         controller.handle_pass()
@@ -122,7 +136,7 @@ class MatchControllerTest(unittest.TestCase):
         self.assertTrue(controller.board_logic.is_game_over)
 
     def test_handle_resign_sets_done_and_winner(self):
-        controller = self.module.MatchController(view=self.view, game_mode="PVP")
+        controller = self.module.MatchController(view=self.view, game_mode="PVP", size=5)
 
         controller.handle_resign()
 
@@ -130,7 +144,7 @@ class MatchControllerTest(unittest.TestCase):
         self.assertEqual(controller.winner, StoneColor.WHITE)
 
     def test_done_cleaning_signal_ends_match(self):
-        controller = self.module.MatchController(view=self.view, game_mode="PVP")
+        controller = self.module.MatchController(view=self.view, game_mode="PVP", size=5)
 
         self.view.panel_widget.done_cleaning_signal.emit()
 

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import random
+from typing import TYPE_CHECKING
 
 from core.constant import StoneColor
-from model.board_logic import BoardLogic
-from model.entities import Cell
+
+if TYPE_CHECKING:
+    from model.board_logic import BoardLogic
+    from model.entities import Cell
 
 
 def choose_best_move(
