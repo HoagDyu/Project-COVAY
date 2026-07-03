@@ -51,7 +51,7 @@ class Cell:
 @dataclass
 class CellGroup:
     group: list[Cell]
-    liberties: int
+    liberties: set[tuple[int,int]]
 
     def add_cell(self, cell: Cell) -> None:
         self.group.append(cell)

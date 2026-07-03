@@ -108,7 +108,7 @@ class BoardLogic:
             for cell in cell_group.group:
                 checked_positions.add((cell.x, cell.y))
 
-            if cell_group.liberties == 0:
+            if len(cell_group.liberties) == 0:
                 captured_groups.append(cell_group.group)
 
         return captured_groups
@@ -152,7 +152,7 @@ class BoardLogic:
     def BFS(self, x: int, y: int) -> CellGroup:
         start = self.board.get_cell(x, y)
         if start.is_blank:
-            return CellGroup(group=[], liberties=0)
+            return CellGroup(group=[], liberties=set())
 
         color = start.get_cell_color()
         group: list[Cell] = []
@@ -172,10 +172,10 @@ class BoardLogic:
                     visited.add(key)
                     queue.append(neighbor)
 
-        return CellGroup(group=group, liberties=len(liberties))
+        return CellGroup(group=group, liberties=liberties)
 
     def get_liberties(self, x: int, y: int) -> int:
-        return self.BFS(x, y).liberties
+        return len(self.BFS(x, y).liberties)
 
     def get_group(self, x: int, y: int) -> list[Cell]:
         return self.BFS(x, y).group
