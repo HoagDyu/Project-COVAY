@@ -14,6 +14,7 @@ class Status(Enum):
     BOT_TURN = 3
     CLEANING = 4
     DONE = 5
+    PAUSE = 6
 
 
  

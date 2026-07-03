@@ -1,11 +1,13 @@
 from __future__ import annotations
+
 from dataclasses import dataclass, field
-from ..core.constant import StoneColor
-from enum import Enum
+
+from core.constant import StoneColor
+
 
 @dataclass
 class Player:
-    color: StoneColor 
+    color: StoneColor
     territory: int = 0
     prisoner: int = 0
     komi: float = 0.0
@@ -23,37 +25,40 @@ class Player:
     def get_score(self) -> float:
         pass
 
-    def set_player_color(self, color: StoneColor) -> None:
-        self.color = color
-
 
 @dataclass
 class Cell:
     x: int
     y: int
-    color: StoneColor = StoneColor.EMPTY #set kiểu dữ liệu là StoneColor và giá trị lúc khởi tạo là Empty
+    color: StoneColor = StoneColor.EMPTY
     neighbors: list["Cell"] = field(default_factory=list)
     is_dead_mark: bool = False
     is_blank: bool = True
 
     def set_stone_color(self, player: Player) -> None:
-        pass
+        self.color = player.color
+        self.is_blank = False
 
     def clear_stone(self) -> None:
-        pass
+        self.color = StoneColor.EMPTY
+        self.is_blank = True
+        self.is_dead_mark = False
 
-    def get_cell_color(self):
+    def get_cell_color(self) -> StoneColor:
         return self.color
+
 
 @dataclass
 class CellGroup:
-    group: list["Cell"]
+    group: list[Cell]
     liberties: int
-    
-    def add_cell(self, cell) -> None:
+
+    def add_cell(self, cell: Cell) -> None:
         self.group.append(cell)
+
     def update_liberties(self, ki: int) -> None:
         self.liberties = ki
+
 
 @dataclass
 class Move:
@@ -66,3 +71,6 @@ class Move:
         pass
 
 
+player = Player
+cell = Cell
+move = Move

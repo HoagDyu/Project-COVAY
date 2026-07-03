@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# File khởi chạy ứng dụng (Entry point)
-=======
 
 import sys
 from PyQt6.QtWidgets import QApplication, QWidget
@@ -16,4 +13,3 @@ def main():
     app.exec()
 if __name__ == '__main__':
     main()
->>>>>>> master
