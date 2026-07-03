@@ -65,7 +65,7 @@ class Rules:
         return move.x == previous_move.x and move.y == previous_move.y
 
     def is_gameover(self, board: "BoardLogic") -> bool:
-        if board.game_over:
+        if board.is_game_over:
             return True
         if len(board.move_history) < 2:
             return False

@@ -16,5 +16,10 @@ class Status(Enum):
     DONE = 5
     PAUSE = 6
 
+class GameMode(Enum):
+    EMPTY = 0
+    PVP = 1
+    PVE = 2
+    
 
  

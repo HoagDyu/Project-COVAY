@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import deque
 
-from core.constant import StoneColor
+from core.constant import StoneColor, GameMode
 from model.entities import Cell, CellGroup, Move, Player
 from model.rules import Rules
 from ai.class_bot import BotAI
@@ -52,7 +52,7 @@ class Board:
 
 
 class BoardLogic:
-    def __init__(self, size: int = 19, bot: bool = False, bot_color: StoneColor = StoneColor.EMPTY):
+    def __init__(self, size: int = 19, has_bot: bool = False, bot_color: StoneColor = StoneColor.EMPTY, game_mode: GameMode = GameMode.EMPTY):
         self.board = Board(size, size)
         self.player_1: Player = Player(color=StoneColor.BLACK,komi=0)
         self.player_2: Player = Player(color=StoneColor.WHITE,komi=6.5)
@@ -62,16 +62,19 @@ class BoardLogic:
         self.is_game_over: bool = False
         self.rules = Rules(self.board)
         self.bot: BotAI = None
+        self.has_bot: bool = has_bot
+        self.game_mode: GameMode = game_mode
 
-        if bot:
+        if has_bot and self.game_mode == GameMode.PVE:
             if bot_color == StoneColor.BLACK:
-                ai_bot = BotAI(color=StoneColor.BLACK)
-                self.player_1 = ai_bot
-                self.bot = self.player_1
+                self.bot = BotAI(color=StoneColor.BLACK)
+                self.player_1 = self.bot
             elif bot_color == StoneColor.WHITE:
-                ai_bot = BotAI(color=StoneColor.WHITE)
-                self.player_2 = ai_bot
-                self.bot = self.player_2
+                self.bot = BotAI(color=StoneColor.WHITE, komi=6.5)
+                self.player_2 = self.bot
+
+        self.current_player = self.player_1
+        self.next_player = self.player_2
 
     def get_bot(self):
         return self.bot
@@ -133,18 +136,18 @@ class BoardLogic:
 
         self.current_player.prisoner += prisoner_count
         self.move_history.append(move)
-        self.switch_turn()
         return True
 
     def process_pass(self) -> bool:
         self.pass_turn()
         if len(self.move_history) >= 2 and self.move_history[-1].is_pass and self.move_history[-2].is_pass:
             self.is_game_over = True
+            print(self.is_game_over)
         return self.is_game_over
 
     def pass_turn(self) -> None:
         self.move_history.append(Move(player=self.current_player, x=None, y=None, is_pass=True))
-        self.switch_turn()
+        print("append pass success")
 
     def BFS(self, x: int, y: int) -> CellGroup:
         start = self.board.get_cell(x, y)
@@ -246,6 +249,7 @@ class BoardLogic:
         return black_teritories, white_teritories
 
     def process_end_match(self) -> StoneColor:
+        print("da duoc goi")
         black_teritories, white_teritories = self.calculate_all_territory()
         self.player_1.add_territory(black_teritories)
         self.player_2.add_territory(white_teritories)

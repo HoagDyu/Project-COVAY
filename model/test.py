@@ -1,6 +1,6 @@
 import unittest
 
-from core.constant import StoneColor
+from core.constant import GameMode, StoneColor
 from model.board_logic import BoardLogic
 from model.entities import Move
 
@@ -76,12 +76,13 @@ class BoardLogicBFSTest(unittest.TestCase):
         self.assertTrue(is_valid)
         self.assertEqual(self.logic.board.get_cell_color(1, 1), StoneColor.EMPTY)
 
-    def test_process_move_accepts_normal_non_capture_move(self):
+    def test_process_move_accepts_normal_non_capture_move_without_switching_turn(self):
         is_valid = self.logic.process_move(2, 2)
 
         self.assertTrue(is_valid)
         self.assertEqual(self.logic.board.get_cell_color(2, 2), StoneColor.BLACK)
-        self.assertEqual(self.logic.get_current_player_color(), StoneColor.WHITE)
+        self.assertEqual(self.logic.get_current_player_color(), StoneColor.BLACK)
+        self.assertEqual(len(self.logic.move_history), 1)
 
     def test_process_move_rejects_suicide_and_clears_stone(self):
         self.place(0, 1, self.white)
@@ -133,6 +134,9 @@ class BoardLogicBFSTest(unittest.TestCase):
         self.assertTrue(second_pass_ended_game)
         self.assertTrue(self.logic.is_game_over)
         self.assertEqual(len(self.logic.move_history), 2)
+
+    def test_rules_is_gameover_uses_board_logic_game_over_flag(self):
+        self.assertFalse(self.logic.rules.is_gameover(self.logic))
 
 
 class BoardLogicTerritoryTest(unittest.TestCase):
@@ -217,6 +221,30 @@ class BoardLogicEndMatchTest(unittest.TestCase):
         winner = self.logic.process_end_match()
 
         self.assertIn(winner, {StoneColor.BLACK, StoneColor.WHITE})
+
+
+class BoardLogicBotSetupTest(unittest.TestCase):
+    def test_pve_with_white_bot_replaces_second_player(self):
+        logic = BoardLogic(
+            size=5,
+            has_bot=True,
+            bot_color=StoneColor.WHITE,
+            game_mode=GameMode.PVE,
+        )
+
+        self.assertIs(logic.get_bot(), logic.player_2)
+        self.assertEqual(logic.player_2.color, StoneColor.WHITE)
+        self.assertEqual(logic.current_player, logic.player_1)
+
+    def test_pvp_ignores_bot_configuration(self):
+        logic = BoardLogic(
+            size=5,
+            has_bot=True,
+            bot_color=StoneColor.WHITE,
+            game_mode=GameMode.PVP,
+        )
+
+        self.assertIsNone(logic.get_bot())
 
 
 if __name__ == "__main__":
