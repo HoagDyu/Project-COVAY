@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .another_bot_algorithm import choose_best_move
+from .advance_bot_algorithm import choose_best_move
 from core.constant import StoneColor
 from model.entities import Player
 

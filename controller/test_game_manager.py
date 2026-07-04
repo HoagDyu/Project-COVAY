@@ -27,12 +27,16 @@ class MockMenuWidget:
         self.size = 5
         self.bot = False
         self.bot_color = StoneColor.EMPTY
+        self.time = 5
 
     def get_size(self):
         return self.size
 
     def get_bot(self):
         return self.bot, self.bot_color
+
+    def get_time(self):
+        return self.time
 
 
 class MockBoardWidget:
@@ -57,7 +61,10 @@ class MockPanelWidget:
         self.pause_signal = FakeSignal()
         self.done_cleaning_signal = FakeSignal()
         self.menu_signal = FakeSignal()
+        self.timeout_signal = FakeSignal()
         self.turn_updates = []
+        self.clock_seconds = None
+        self.prisoner_updates = []
 
     def update_turn_display(self, player_color, status, winner_color=StoneColor.EMPTY):
         self.turn_updates.append(
@@ -65,6 +72,17 @@ class MockPanelWidget:
                 "player_color": player_color,
                 "status": status,
                 "winner_color": winner_color,
+            }
+        )
+
+    def set_clocks(self, initial_seconds):
+        self.clock_seconds = initial_seconds
+
+    def update_prisoners(self, black_prisoners, white_prisoners):
+        self.prisoner_updates.append(
+            {
+                "black_prisoners": black_prisoners,
+                "white_prisoners": white_prisoners,
             }
         )
 
@@ -114,6 +132,12 @@ class MatchControllerTest(unittest.TestCase):
         self.assertIn(controller.handle_pause, self.view.panel_widget.pause_signal.slots)
         self.assertIn(controller.end_match, self.view.panel_widget.done_cleaning_signal.slots)
         self.assertIn(controller.handle_menu, self.view.panel_widget.menu_signal.slots)
+        self.assertIn(controller.handle_timeout, self.view.panel_widget.timeout_signal.slots)
+        self.assertEqual(self.view.panel_widget.clock_seconds, 300)
+        self.assertEqual(
+            self.view.panel_widget.prisoner_updates[-1],
+            {"black_prisoners": 0, "white_prisoners": 0},
+        )
 
     def test_handle_click_places_stone_and_updates_board(self):
         controller = self.module.MatchController(view=self.view, game_mode=GameMode.PVP, size=5)
@@ -124,6 +148,10 @@ class MatchControllerTest(unittest.TestCase):
         self.assertEqual(controller.board_logic.board.get_cell_color(2, 2), StoneColor.BLACK)
         self.assertEqual(controller.board_logic.get_current_player_color(), StoneColor.WHITE)
         self.assertGreater(self.view.board_widget.update_count, initial_update_count)
+        self.assertEqual(
+            self.view.panel_widget.prisoner_updates[-1],
+            {"black_prisoners": 0, "white_prisoners": 0},
+        )
         self.assertEqual(self.view.errors, [])
 
     def test_handle_click_invalid_move_shows_error(self):
@@ -196,6 +224,24 @@ class MatchControllerTest(unittest.TestCase):
         self.assertEqual(controller.status, Status.DONE)
         self.assertIn(controller.winner, {StoneColor.BLACK, StoneColor.WHITE})
         self.assertEqual(self.view.panel_widget.turn_updates[-1]["winner_color"], controller.winner)
+
+    def test_game_controller_passes_menu_time_to_match_panel(self):
+        self.view.menu_widget.time = 15
+        controller = self.module.GameController(self.view)
+
+        self.view.menu_view.pvp_start_signal.emit()
+
+        self.assertEqual(controller.current_match.view.panel_widget.clock_seconds, 900)
+
+    def test_timeout_signal_ends_match_and_awards_opponent(self):
+        controller = self.module.MatchController(view=self.view, game_mode=GameMode.PVP, size=5)
+
+        self.view.panel_widget.timeout_signal.emit(StoneColor.BLACK)
+
+        self.assertEqual(controller.status, Status.DONE)
+        self.assertEqual(controller.winner, StoneColor.WHITE)
+        self.assertTrue(controller.board_logic.is_game_over)
+        self.assertEqual(self.view.panel_widget.turn_updates[-1]["winner_color"], StoneColor.WHITE)
 
 
 if __name__ == "__main__":

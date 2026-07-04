@@ -25,7 +25,7 @@ class BoardLogicBFSTest(unittest.TestCase):
         result = self.logic.BFS(2, 2)
 
         self.assertEqual([(cell.x, cell.y) for cell in result.group], [(2, 2)])
-        self.assertEqual(result.liberties, 4)
+        self.assertEqual(len(result.liberties), 4)
 
     def test_bfs_returns_connected_group_with_unique_liberties(self):
         self.place(1, 1, self.black)
@@ -35,7 +35,7 @@ class BoardLogicBFSTest(unittest.TestCase):
         positions = {(cell.x, cell.y) for cell in result.group}
 
         self.assertEqual(positions, {(1, 1), (1, 2)})
-        self.assertEqual(result.liberties, 6)
+        self.assertEqual(len(result.liberties), 6)
 
     def test_bfs_does_not_cross_opponent_stones(self):
         self.place(1, 1, self.black)

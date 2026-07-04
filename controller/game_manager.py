@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-
+import time
 try:
     from PyQt6.QtCore import QThread
 except ModuleNotFoundError:
@@ -48,6 +48,7 @@ class GameController:
         self.game_mode = game_mode
         size = self.view.menu_widget.get_size()
         bot, bot_color = self.view.menu_widget.get_bot()
+        time_seconds = self.view.menu_widget.get_time() * 60
         print("da chay")
 
         self.current_match = MatchController(
@@ -55,11 +56,20 @@ class GameController:
             game_mode=self.game_mode,
             size=size,
             bot=bot,
-            bot_color = bot_color
+            bot_color=bot_color,
+            time_seconds=time_seconds,
         )
 
 class MatchController:
-    def __init__(self, view: MainWindow, game_mode: GameMode, size: int, bot: bool = False, bot_color: StoneColor = StoneColor.EMPTY):
+    def __init__(
+        self,
+        view: MainWindow,
+        game_mode: GameMode,
+        size: int,
+        bot: bool = False,
+        bot_color: StoneColor = StoneColor.EMPTY,
+        time_seconds: int = 300,
+    ):
         self.view = view
         self.game_mode = game_mode
         self.status = Status.IDLE
@@ -81,6 +91,8 @@ class MatchController:
         self.view.panel_widget.pause_signal.connect(self.handle_pause)
         self.view.panel_widget.done_cleaning_signal.connect(self.end_match)
         self.view.panel_widget.menu_signal.connect(self.handle_menu)
+        self.view.panel_widget.timeout_signal.connect(self.handle_timeout)
+        self.view.panel_widget.set_clocks(time_seconds)
 
         if game_mode == GameMode.PVP:
             self.pvp_match_start()
@@ -122,12 +134,20 @@ class MatchController:
 
     def update_board(self, winner_color: StoneColor = StoneColor.EMPTY):
         self.view.board_widget.update()
+        self.view.panel_widget.update_prisoners(
+            black_prisoners=self.board_logic.player_1.prisoner,
+            white_prisoners=self.board_logic.player_2.prisoner,
+        )
         next_player_color = self.board_logic.get_current_player().color
         self.view.panel_widget.update_turn_display(player_color = next_player_color, status = self.status, winner_color = winner_color)
 
     def pvp_match_start(self):
         self.status = Status.PLAYING
         first_player_color = self.board_logic.get_current_player().color
+        self.view.panel_widget.update_prisoners(
+            black_prisoners=self.board_logic.player_1.prisoner,
+            white_prisoners=self.board_logic.player_2.prisoner,
+        )
         self.view.panel_widget.update_turn_display(player_color = first_player_color, status = self.status)
         self.view.board_widget.update()
 
@@ -155,12 +175,20 @@ class MatchController:
         if self.has_bot:
             if self.bot_color == StoneColor.BLACK:
                 self.status = Status.BOT_TURN
+                self.view.panel_widget.update_prisoners(
+                    black_prisoners=self.board_logic.player_1.prisoner,
+                    white_prisoners=self.board_logic.player_2.prisoner,
+                )
                 self.view.panel_widget.update_turn_display(player_color = StoneColor.BLACK, status = self.status)
                 self.view.board_widget.update()
                 self.start_bot_thread()
                 return
             elif self.bot_color == StoneColor.WHITE:
                 self.status = Status.HUMAN_TURN
+        self.view.panel_widget.update_prisoners(
+            black_prisoners=self.board_logic.player_1.prisoner,
+            white_prisoners=self.board_logic.player_2.prisoner,
+        )
         self.view.panel_widget.update_turn_display(player_color = StoneColor.BLACK, status = self.status)
         self.view.board_widget.update()
         
@@ -206,7 +234,15 @@ class MatchController:
 
     def handle_pause(self):
         match self.status:
-            case Status.PAUSE | Status.BOT_TURN | Status.DONE:
+            case Status.PAUSE:
+                if self.game_mode == GameMode.PVP:
+                    self.status = Status.PLAYING
+                elif self.game_mode == GameMode.PVE and self.board_logic.get_current_player().color != self.bot_color:
+                    self.status = Status.HUMAN_TURN
+                else:
+                    self.status = Status.BOT_TURN
+                self.update_board()
+            case Status.BOT_TURN | Status.DONE:
                 pass
             case Status.PLAYING | Status.HUMAN_TURN | Status.CLEANING:
                 self.status = Status.PAUSE
@@ -215,6 +251,15 @@ class MatchController:
     def handle_menu(self):
         self.view.switch_to_menu_screen()
 
+    def handle_timeout(self, loser_color: StoneColor):
+        if loser_color == StoneColor.BLACK:
+            self.winner = StoneColor.WHITE
+        elif loser_color == StoneColor.WHITE:
+            self.winner = StoneColor.BLACK
+        else:
+            return
+        self.board_logic.is_game_over = True
+        self.status = Status.DONE
+        self.update_board(winner_color=self.winner)
+
     
-
-
