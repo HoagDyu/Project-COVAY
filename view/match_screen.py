@@ -21,13 +21,4 @@ class MatchScreen(QWidget):
         layout.addStretch(1)
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(24)
-        # layout.addWidget(
-        #     self.board_widget,
-        #     stretch=5,
-        #     alignment=Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignCenter,
-        # )
-        # layout.addWidget(self.panel_widget,
-        #     stretch=1,
-        #     alignment=Qt.AlignmentFlag.AlignVCenter
-        # )
 

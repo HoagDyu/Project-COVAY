@@ -28,19 +28,15 @@ class MenuWidget(QWidget):
     def __init__(self):
         super().__init__()
         
-        # Đường dẫn tới file menu.ui cùng thư mục
-        ui_path = os.path.join(os.path.dirname(__file__), 'menu2.ui')
+        ui_path = os.path.join(os.path.dirname(__file__),"ui", 'menu2.ui')
         
-        # Nạp giao diện từ file .ui vào widget này
         self.ui = uic.loadUi(ui_path, self)
         
         self.setWindowTitle("Menu Cờ Vây")
 
-        # ---- Load ảnh nền ----
-        bg_path = os.path.join(os.path.dirname(__file__), "background.jpg")
+        bg_path = os.path.join(os.path.dirname(__file__),"..","assets","images", "background.jpg")
         self.background_pixmap = QPixmap(bg_path)
         
-        # Kết nối sự kiện click của các nút bấm (tên nút dựa theo objectName trong file .ui)
         self.btn_pvp.clicked.connect(self.start_player_vs_player)
         self.btn_pve.clicked.connect(self.start_player_vs_ai)
         self.btn_exit.clicked.connect(self.close)
@@ -60,14 +56,12 @@ class MenuWidget(QWidget):
         self.set_up_color()
 
     def paintEvent(self, event):
-        # Vẽ ảnh nền phủ toàn bộ widget, tự stretch theo kích thước cửa sổ
         painter = QPainter(self)
         painter.drawPixmap(self.rect(), self.background_pixmap)
         super().paintEvent(event)
 
     def set_up_color(self):
 
-        # Đảm bảo frame vẽ được background theo QSS
         self.frame.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         self.horizontalLayout_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -136,12 +130,3 @@ class MenuWidget(QWidget):
     
     def get_time(self) -> int:
         return self.ui.time_combo.currentData()
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    
-    # Khởi tạo và hiển thị MenuWidget đầu tiên khi chạy app
-    menu_app = MenuWidget()
-    menu_app.show()
-    
-    sys.exit(app.exec())

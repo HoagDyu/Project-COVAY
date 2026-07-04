@@ -1,34 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-import time
-try:
-    from PyQt6.QtCore import QThread
-except ModuleNotFoundError:
-    class _FallbackSignal:
-        def __init__(self):
-            self._slots = []
-
-        def connect(self, slot):
-            self._slots.append(slot)
-
-        def emit(self, *args, **kwargs):
-            for slot in list(self._slots):
-                slot(*args, **kwargs)
-
-    class QThread:
-        def __init__(self):
-            self.started = _FallbackSignal()
-            self.finished = _FallbackSignal()
-
-        def start(self):
-            self.started.emit()
-
-        def quit(self):
-            self.finished.emit()
-
-        def deleteLater(self):
-            pass
+from PyQt6.QtCore import QThread
 
 from core.constant import Status, StoneColor, GameMode
 from model.board_logic import BoardLogic

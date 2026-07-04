@@ -30,7 +30,7 @@ class PanelWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        ui_path = os.path.join(os.path.dirname(__file__), "panel.ui")
+        ui_path = os.path.join(os.path.dirname(__file__),"ui", "panel.ui")
         uic.loadUi(ui_path, self)
 
         self.remaining_time = {
@@ -83,7 +83,6 @@ class PanelWidget(QWidget):
             }
         """)
 
-        # BLACK / WHITE: cùng width cố định = width LCD, KHÔNG dùng margin (gây lệch)
         self.white_ava.setStyleSheet("""
             background-color: black; 
             color: white; 
@@ -102,7 +101,6 @@ class PanelWidget(QWidget):
             min-width: 90px;
         """)
 
-        # Pass: nhỏ, căn giữa
         self.btn_pass.setStyleSheet("""
             background-color: #595959;
             color: white;
@@ -115,15 +113,13 @@ class PanelWidget(QWidget):
         self.gridLayout_2.setContentsMargins(15, 15, 15, 15)
         self.gridLayout_5.setAlignment(self.btn_pass, Qt.AlignmentFlag.AlignCenter)
 
-        # Ép cột 0 và cột 2 có width tối thiểu bằng nhau (thay vì chỉ dùng stretch)
         self.gridLayout_5.setColumnMinimumWidth(0, 90)
         self.gridLayout_5.setColumnMinimumWidth(2, 90)
         self.gridLayout_5.setColumnStretch(0, 1)
-        self.gridLayout_5.setColumnStretch(1, 0)   # cột Pass không giãn thêm
+        self.gridLayout_5.setColumnStretch(1, 0)   
         self.gridLayout_5.setColumnStretch(2, 1)
         self.gridLayout_5.setSpacing(15)
 
-        # căn giữa các LCD/BLACK/WHITE trong ô của chúng (tránh bị kéo lệch theo sizePolicy Expanding)
         for w in [self.black_number, self.white_number,
                 self.black_prisoner_number, self.white_prisoner_number,
                 self.black_ava, self.white_ava]:
