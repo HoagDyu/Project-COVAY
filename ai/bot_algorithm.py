@@ -74,11 +74,15 @@ def evaluate_move(
 
     score = 0
 
-    score += center_score(cell, board_logic)
+    score += center_score(cell, board_logic) 
 
-    score += friendly_neighbors(cell, color) * 3
+    score += friendly_neighbors(cell, color) * 4
 
     score += enemy_neighbors(cell, color) * 2
+
+    score += liberty_score(cell) * 3
+
+    score -= danger_score(cell) * 2
 
     return score
 
@@ -133,3 +137,37 @@ def enemy_neighbors(
         for neighbor in cell.neighbors
         if neighbor.get_cell_color() == opponent
     )
+
+
+def liberty_score(
+    cell: Cell,
+) -> int:
+    """
+    Count the number of empty neighboring cells.
+
+    More liberties provide greater flexibility
+    for future moves and reduce the risk of capture.
+    """
+
+    return sum(
+        1
+        for neighbor in cell.neighbors
+        if neighbor.is_blank
+    )
+
+
+def danger_score(
+    cell: Cell
+) -> int:
+    """
+    Penalize moves with too few liberties.
+    """
+    liberties = liberty_score(cell)
+
+    if liberties == 0:
+        return 5
+
+    if liberties == 1:
+        return 2
+
+    return 0
