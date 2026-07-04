@@ -3,3 +3,4 @@ text_main_window.ui
 __pycache__/
 *.py[cod]
 .idea
+ai/advance_bot_algorithm.py
