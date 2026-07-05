@@ -132,7 +132,7 @@ class BoardLogic:
             self.board.get_cell(x, y).clear_stone()
             return False
 
-        self.current_player.prisoner += prisoner_count
+        self.current_player.add_prisoner(n=prisoner_count)
         self.move_history.append(move)
         return True
 
@@ -201,9 +201,6 @@ class BoardLogic:
             prisoner += 1
         return prisoner
 
-    def remove_dead_group(self, x: int, y: int) -> int:
-        return self._remove_group(self.get_group(x, y))
-
     def BFS_blank_group(self, x: int, y: int):
         start = self.board.get_cell(x, y)
         border_color: set[StoneColor] = set()
@@ -257,14 +254,9 @@ class BoardLogic:
         self.is_game_over = True
         return self.next_player.color
 
-    def get_current_player_color(self) -> StoneColor:
-        return self.current_player.color
-
     def get_current_player(self) -> Player:
         return self.current_player
     
-    def set_game_over(self, b: bool) -> None:
-        self.is_game_over = b
 
 
 board_logic = BoardLogic

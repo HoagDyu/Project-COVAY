@@ -1,7 +1,7 @@
 import os
 
 from PyQt6 import uic
-from PyQt6.QtCore import QTimer, pyqtSignal, Qt
+from PyQt6.QtCore import QTimer, pyqtSignal, Qt, QElapsedTimer
 from PyQt6.QtWidgets import QWidget,QPushButton, QLCDNumber
 
 
@@ -41,6 +41,7 @@ class PanelWidget(QWidget):
         self.clock_timer = QTimer(self)
         self.clock_timer.setInterval(1000)
         self.clock_timer.timeout.connect(self._tick_clock)
+        self._elapsed = QElapsedTimer()
 
         self.btn_pass.clicked.connect(self.pass_signal.emit)
         self.btn_resign.clicked.connect(self.resign_signal.emit)
@@ -153,16 +154,25 @@ class PanelWidget(QWidget):
             self.stop_clocks()
             return
 
+        if self.active_clock_color == player_color and self.clock_timer.isActive():
+            return  # đã đang chạy đúng người này, không làm gì thêm
+
+        self._commit_elapsed()  # chốt sổ thời gian thực đã dùng của người trước đó
+        self._update_clock_labels()  
         self.active_clock_color = player_color
+
         if self.remaining_time[player_color] <= 0:
             self.stop_clocks()
             self.timeout_signal.emit(player_color)
             return
 
+        self._elapsed.start()
         if not self.clock_timer.isActive():
             self.clock_timer.start()
 
     def stop_clocks(self) -> None:
+        self._commit_elapsed()
+        self._update_clock_labels()  
         self.active_clock_color = StoneColor.EMPTY
         self.clock_timer.stop()
 
@@ -178,12 +188,20 @@ class PanelWidget(QWidget):
             self.stop_clocks()
             return
 
-        self.remaining_time[color] = max(0, self.remaining_time[color] - 1)
+        self._commit_elapsed()
+        self._elapsed.start()  # bắt đầu đếm lại khoảng kế tiếp cho cùng người này
         self._update_clock_labels()
 
-        if self.remaining_time[color] == 0:
+        if self.remaining_time[color] <= 0:
             self.stop_clocks()
             self.timeout_signal.emit(color)
+    
+    def _commit_elapsed(self) -> None:
+        color = self.active_clock_color
+        if color in (StoneColor.BLACK, StoneColor.WHITE) and self._elapsed.isValid():
+            ms = self._elapsed.elapsed()
+            self.remaining_time[color] = max(0.0, self.remaining_time[color] - ms / 1000)
+            print(f"[DEBUG] {color} còn lại: {self.remaining_time[color]:.3f}s (vừa trừ {ms}ms)")
 
     def _update_clock_labels(self) -> None:
         black_seconds = self.remaining_time[StoneColor.BLACK]

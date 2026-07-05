@@ -67,8 +67,6 @@ class Move:
     y: int | None = None
     is_pass: bool = False
 
-    def get_sgf_string(self) -> str:
-        pass
 
 
 player = Player
