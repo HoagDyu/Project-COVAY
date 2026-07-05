@@ -22,7 +22,6 @@ class GameController:
         size = self.view.menu_widget.get_size()
         bot, bot_color = self.view.menu_widget.get_bot()
         time_seconds = self.view.menu_widget.get_time() * 60
-        print("da chay")
 
         self.current_match = MatchController(
             view=self.view,
@@ -52,6 +51,7 @@ class MatchController:
         self.thread = QThread()
         self.board_logic = BoardLogic(size=size, has_bot=bot, bot_color=bot_color,game_mode=game_mode)
         self.bot = self.board_logic.get_bot()
+        self.pass_count: int = 0
 
         cell_getter = self.board_logic.board.get_cell_color
         dead_getter = self.board_logic.board.is_dead_cell
@@ -75,11 +75,9 @@ class MatchController:
     def handle_bot_turn(self, move):
         if move is None:
             self.board_logic.process_pass()
-            print("pass")
         else:
             x,y = move
             is_valid = self.board_logic.process_move(x=x,y=y)
-            print(f"{x},{y}")
             if not is_valid:
                 self.board_logic.process_pass()
 
@@ -130,7 +128,6 @@ class MatchController:
         match self.game_mode:
             case GameMode.PVE:
                 if self.has_bot and self.board_logic.is_game_over:
-                    print("thoa")
                     self.end_match()
                 elif self.has_bot and current_player_color == self.bot_color:
                     self.status = Status.BOT_TURN
@@ -144,7 +141,6 @@ class MatchController:
                     self.status = Status.PLAYING
 
     def pve_match_start(self):
-        print("chay bot")
         if self.has_bot:
             if self.bot_color == StoneColor.BLACK:
                 self.status = Status.BOT_TURN
@@ -190,7 +186,15 @@ class MatchController:
         match self.status:
             case Status.PAUSE | Status.BOT_TURN | Status.DONE:
                 pass
-            case Status.PLAYING | Status.HUMAN_TURN | Status.CLEANING:
+            case Status.CLEANING:
+                self.pass_count += 1
+                self.board_logic.process_pass()
+                self.switch_turn()
+                if self.pass_count >=2:
+                    self.pass_count = 0
+                    self.end_match()
+
+            case Status.PLAYING | Status.HUMAN_TURN:
                 self.board_logic.process_pass()
                 self.switch_turn()
                 if self.status != Status.DONE:

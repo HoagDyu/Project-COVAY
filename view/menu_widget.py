@@ -49,9 +49,11 @@ class MenuWidget(QWidget):
         self.size_combo.addItem("13x13",13)
         self.size_combo.addItem("9x9",9)
 
-        self.time_combo.addItem("5m",5)
-        self.time_combo.addItem("15m",15)
-        self.time_combo.addItem("30m",30)
+        self.time_combo.addItem("1 minutes",1)
+        self.time_combo.addItem("3 minutes",3)
+        self.time_combo.addItem("5 minutes",5)
+        self.time_combo.addItem("15 minutes",15)
+        self.time_combo.addItem("30 minutes",30)
         
         self.set_up_color()
 

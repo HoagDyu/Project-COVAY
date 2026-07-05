@@ -159,7 +159,8 @@ class PanelWidget(QWidget):
             self.timeout_signal.emit(player_color)
             return
 
-        self.clock_timer.start()
+        if not self.clock_timer.isActive():
+            self.clock_timer.start()
 
     def stop_clocks(self) -> None:
         self.active_clock_color = StoneColor.EMPTY

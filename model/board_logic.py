@@ -1,7 +1,5 @@
 from __future__ import annotations
-
 from collections import deque
-
 from core.constant import StoneColor, GameMode
 from model.entities import Cell, CellGroup, Move, Player
 from model.rules import Rules
@@ -142,12 +140,10 @@ class BoardLogic:
         self.pass_turn()
         if len(self.move_history) >= 2 and self.move_history[-1].is_pass and self.move_history[-2].is_pass:
             self.is_game_over = True
-            print(self.is_game_over)
         return self.is_game_over
 
     def pass_turn(self) -> None:
         self.move_history.append(Move(player=self.current_player, x=None, y=None, is_pass=True))
-        print("append pass success")
 
     def BFS(self, x: int, y: int) -> CellGroup:
         start = self.board.get_cell(x, y)
@@ -249,7 +245,6 @@ class BoardLogic:
         return black_teritories, white_teritories
 
     def process_end_match(self) -> StoneColor:
-        print("da duoc goi")
         black_teritories, white_teritories = self.calculate_all_territory()
         self.player_1.add_territory(black_teritories)
         self.player_2.add_territory(white_teritories)
@@ -267,6 +262,9 @@ class BoardLogic:
 
     def get_current_player(self) -> Player:
         return self.current_player
+    
+    def set_game_over(self, b: bool) -> None:
+        self.is_game_over = b
 
 
 board_logic = BoardLogic
